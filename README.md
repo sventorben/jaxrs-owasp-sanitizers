@@ -1,6 +1,6 @@
-# JAX-RS Sanitizers
+# JAX-RS OWASP Sanitizers
 
-Integration of [OWASP JSON Sanitizer](https://www.owasp.org/index.php/OWASP_JSON_Sanitizer) and [HTML Sanitizer](https://www.owasp.org/index.php/OWASP_Java_HTML_Sanitizer_Project) for JAX-RS.
+Integration of [OWASP JSON Sanitizer](https://www.owasp.org/index.php/OWASP_JSON_Sanitizer) and [OWASP Java HTML Sanitizer](https://www.owasp.org/index.php/OWASP_Java_HTML_Sanitizer_Project) for JAX-RS.
 
 [![Build Status](https://travis-ci.org/sventorben/jaxrs-owasp-sanitizers.svg?branch=master)](https://travis-ci.org/sventorben/jaxrs-owasp-sanitizers)
 
