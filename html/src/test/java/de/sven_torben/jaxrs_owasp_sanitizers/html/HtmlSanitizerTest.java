@@ -1,13 +1,10 @@
-package de.sven_torben.jaxrs_owasp_sanitizers.json;
+package de.sven_torben.jaxrs_owasp_sanitizers.html;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.junit.Assert.assertThat;
 
-import de.sven_torben.jaxrs_owasp_sanitizers.core.MediaTypes;
-import de.sven_torben.jaxrs_owasp_sanitizers.json.JsonSanitizingReaderInterceptor;
-import de.sven_torben.jaxrs_owasp_sanitizers.json.JsonSanitizingWriterInterceptor;
 import org.glassfish.jersey.server.ResourceConfig;
 import org.glassfish.jersey.test.JerseyTest;
 import org.junit.Test;
@@ -28,12 +25,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @RunWith(Parameterized.class)
-public class JsonSanitizerTest extends JerseyTest {
+public class HtmlSanitizerTest extends JerseyTest {
 
-  private static final String CUSTOM_JSON_CONTENT_TYPE = "custom/vnd.me+json";
-
-  private static final String INPUT = "false,true";
-  private static final String SANITIZED = "false";
+  private static final String INPUT = "<b>hello <bogus></bogus><i>world</i></b>";
+  private static final String SANITIZED = "<b>hello <i>world</i></b>";
 
 
   @Parameterized.Parameter(0)
@@ -48,9 +43,8 @@ public class JsonSanitizerTest extends JerseyTest {
   @Parameterized.Parameters
   public static Iterable<Object[]> pathsToTest() {
     return Arrays.asList(
-        new Object[]{MediaType.APPLICATION_JSON, 5, SANITIZED},
-        new Object[]{CUSTOM_JSON_CONTENT_TYPE, 5, SANITIZED},
-        new Object[]{MediaType.TEXT_PLAIN, 10, INPUT}
+        new Object[]{MediaType.TEXT_HTML, 25, SANITIZED},
+        new Object[]{MediaType.TEXT_PLAIN, 40, INPUT}
     );
   }
 
@@ -58,21 +52,21 @@ public class JsonSanitizerTest extends JerseyTest {
   public static class TestResource {
 
     @GET
-    @Path("json")
-    @Produces({ MediaType.APPLICATION_JSON, CUSTOM_JSON_CONTENT_TYPE, MediaType.TEXT_PLAIN })
-    public String writeJson() {
+    @Path("html")
+    @Produces({ MediaType.TEXT_HTML, MediaType.TEXT_PLAIN })
+    public String writeHtml() {
       return INPUT;
     }
 
     @POST
-    @Path("json")
-    @Consumes({ MediaType.APPLICATION_JSON, CUSTOM_JSON_CONTENT_TYPE, MediaType.TEXT_PLAIN })
-    public Response readJson(
-        String json, @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType contentType) {
-      if (MediaTypes.isJsonType(contentType)) {
-        assertThat(json, is(equalTo(SANITIZED)));
+    @Path("html")
+    @Consumes({ MediaType.TEXT_HTML, MediaType.TEXT_PLAIN })
+    public Response readHtml(
+        String html, @HeaderParam(HttpHeaders.CONTENT_TYPE) MediaType contentType) {
+      if (MediaType.TEXT_HTML_TYPE.isCompatible(contentType)) {
+        assertThat(html, is(equalTo(SANITIZED)));
       } else {
-        assertThat(json, is(equalTo(INPUT)));
+        assertThat(html, is(equalTo(INPUT)));
       }
       return Response.ok().build();
     }
@@ -82,17 +76,17 @@ public class JsonSanitizerTest extends JerseyTest {
   @Override
   protected Application configure() {
     return new ResourceConfig(TestResource.class)
-        .register(JsonSanitizingWriterInterceptor.class)
-        .register(JsonSanitizingReaderInterceptor.class);
+        .register(HtmlSanitizingWriterInterceptor.class)
+        .register(HtmlSanitizingReaderInterceptor.class);
   }
 
   @Test
   public void testWriter() {
-    Response response = target("/test/json").request(contentType).get(Response.class);
-    String json = response.readEntity(String.class);
-    assertThat(json, is(equalTo(expectedPayload)));
+    Response response = target("/test/html").request(contentType).get(Response.class);
+    String html = response.readEntity(String.class);
+    assertThat(html, is(equalTo(expectedPayload)));
     assertThat(response.getHeaderString(HttpHeaders.CONTENT_TYPE), is(equalTo(contentType)));
-    if (MediaTypes.isJsonType(MediaType.valueOf(contentType))) {
+    if (MediaType.TEXT_HTML_TYPE.isCompatible(MediaType.valueOf(contentType))) {
       assertThat(response.getHeaderString(HttpHeaders.CONTENT_LENGTH),
           is(equalTo(String.valueOf(contentLength))));
     } else {
@@ -102,7 +96,7 @@ public class JsonSanitizerTest extends JerseyTest {
 
   @Test
   public void testReader() {
-    Response response = target("/test/json").request().post(Entity.entity(INPUT, contentType));
+    Response response = target("/test/html").request().post(Entity.entity(INPUT, contentType));
     assertThat(response.getStatus(), is(equalTo(Response.Status.OK.getStatusCode())));
   }
 

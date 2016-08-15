@@ -1,11 +1,11 @@
-package de.sven_torben.jaxrs_owasp_sanitizers.json;
+package de.sven_torben.jaxrs_owasp_sanitizers.core;
 
 import java.util.Objects;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 
-class HeaderExtractor {
+public class HeaderExtractor {
 
   private final MultivaluedMap<String, ? extends Object> headers;
 

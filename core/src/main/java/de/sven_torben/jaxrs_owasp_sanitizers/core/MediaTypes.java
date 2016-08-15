@@ -1,10 +1,10 @@
-package de.sven_torben.jaxrs_owasp_sanitizers.json;
+package de.sven_torben.jaxrs_owasp_sanitizers.core;
 
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import javax.ws.rs.core.MediaType;
 
-class MediaTypes {
+public class MediaTypes {
 
   private static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
   private static final String CHARSET_PARAMETER = "charset";
@@ -13,7 +13,12 @@ class MediaTypes {
   private MediaTypes() {
   }
 
-  static boolean isJsonType(final MediaType mediaType) {
+  /**
+   * Checks whether media type is a JSON media type.
+   * @param mediaType media type to be checked.
+   * @return true, if media type is JSON media type. False, otherwise.
+   */
+  public static boolean isJsonType(final MediaType mediaType) {
     if (mediaType != null) {
       String subtype = mediaType.getSubtype();
       return JSON_SUBTYPE.equalsIgnoreCase(subtype) || subtype.endsWith("+json");

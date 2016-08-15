@@ -1,4 +1,4 @@
-package de.sven_torben.jaxrs_owasp_sanitizers.json;
+package de.sven_torben.jaxrs_owasp_sanitizers.core;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
