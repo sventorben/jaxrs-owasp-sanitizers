@@ -27,18 +27,18 @@ public class JsonSanitizingWriterInterceptor implements WriterInterceptor {
 
     if (contentType == null || MediaTypes.isJsonType(contentType)) {
       OutputStream originalOutputStream = writerInterceptorContext.getOutputStream();
-      try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-        writerInterceptorContext.setOutputStream(baos);
+      ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      writerInterceptorContext.setOutputStream(baos);
 
-        writerInterceptorContext.proceed();
+      writerInterceptorContext.proceed();
 
-        Charset charset = MediaTypes.extractCharset(contentType);
-        String jsonish = new String(baos.toByteArray(), charset);
-        String sanitized = JsonSanitizer.sanitize(jsonish);
-        byte[] bytes = sanitized.getBytes(StandardCharsets.UTF_8);
-        originalOutputStream.write(bytes);
-        adjustHeaders(headers, bytes.length, contentType);
-      }
+      Charset charset = MediaTypes.extractCharset(contentType);
+      String jsonish = new String(baos.toByteArray(), charset);
+      String sanitized = JsonSanitizer.sanitize(jsonish);
+      byte[] bytes = sanitized.getBytes(StandardCharsets.UTF_8);
+      originalOutputStream.write(bytes);
+      adjustHeaders(headers, bytes.length, contentType);
+
     } else {
       writerInterceptorContext.proceed();
     }

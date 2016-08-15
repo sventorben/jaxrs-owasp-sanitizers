@@ -34,11 +34,10 @@ public class JsonSanitizingReaderInterceptor implements ReaderInterceptor {
       String jsonish = IOUtils.toString(originalInputStream, charset);
       String sanitized = JsonSanitizer.sanitize(jsonish);
       byte[] bytes = sanitized.getBytes(StandardCharsets.UTF_8);
-      try (ByteArrayInputStream bais = new ByteArrayInputStream(bytes)) {
-        adjustHeaders(headers, bytes.length, contentType);
-        readerInterceptorContext.setInputStream(bais);
-        return readerInterceptorContext.proceed();
-      }
+      ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+      readerInterceptorContext.setInputStream(bais);
+      adjustHeaders(headers, bytes.length, contentType);
+      return readerInterceptorContext.proceed();
     }
     return readerInterceptorContext.proceed();
   }
