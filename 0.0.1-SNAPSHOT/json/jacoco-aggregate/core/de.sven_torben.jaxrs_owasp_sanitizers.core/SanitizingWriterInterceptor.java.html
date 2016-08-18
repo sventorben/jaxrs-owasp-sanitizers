@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../../jacoco-resources/report.gif" type="image/gif"/><title>SanitizingWriterInterceptor.java</title><link rel="stylesheet" href="../../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../../index.html" class="el_report">de.sven-torben.jaxrs-owasp-sanitizers:json</a> &gt; <a href="../index.html" class="el_bundle">core</a> &gt; <a href="index.source.html" class="el_package">de.sven_torben.jaxrs_owasp_sanitizers.core</a> &gt; <span class="el_source">SanitizingWriterInterceptor.java</span></div><h1>SanitizingWriterInterceptor.java</h1><pre class="source lang-java linenums">package de.sven_torben.jaxrs_owasp_sanitizers.core;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Objects;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.HttpHeaders;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.ext.WriterInterceptor;
+import javax.ws.rs.ext.WriterInterceptorContext;
+
+public abstract class SanitizingWriterInterceptor implements WriterInterceptor {
+
+  private final Sanitizer sanitizer;
+
+<span class="fc" id="L21">  public SanitizingWriterInterceptor(final Sanitizer sanitizer) {</span>
+<span class="fc" id="L22">    this.sanitizer = Objects.requireNonNull(sanitizer);</span>
+<span class="fc" id="L23">  }</span>
+
+  @Override
+  public final void aroundWriteTo(final WriterInterceptorContext writerInterceptorContext)
+      throws IOException, WebApplicationException {
+<span class="fc" id="L28">    MultivaluedMap&lt;String, Object&gt; headers = writerInterceptorContext.getHeaders();</span>
+<span class="fc" id="L29">    HeaderExtractor headerExtractor = new HeaderExtractor(headers);</span>
+<span class="fc" id="L30">    MediaType contentType = headerExtractor.extractContentTypeHeader();</span>
+
+<span class="fc bfc" id="L32" title="All 2 branches covered.">    if (supports(contentType)) {</span>
+<span class="fc" id="L33">      OutputStream originalOutputStream = writerInterceptorContext.getOutputStream();</span>
+<span class="fc" id="L34">      ByteArrayOutputStream baos = new ByteArrayOutputStream();</span>
+<span class="fc" id="L35">      writerInterceptorContext.setOutputStream(baos);</span>
+
+<span class="fc" id="L37">      writerInterceptorContext.proceed();</span>
+
+<span class="fc" id="L39">      Charset charset = MediaTypes.extractCharset(contentType);</span>
+<span class="fc" id="L40">      String dirty = new String(baos.toByteArray(), charset);</span>
+<span class="fc" id="L41">      String sanitized = sanitizer.sanitize(dirty);</span>
+<span class="fc" id="L42">      byte[] bytes = sanitized.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L43">      originalOutputStream.write(bytes);</span>
+<span class="fc" id="L44">      adjustHeaders(headers, bytes.length, contentType);</span>
+
+<span class="fc" id="L46">    } else {</span>
+<span class="fc" id="L47">      writerInterceptorContext.proceed();</span>
+    }
+<span class="fc" id="L49">  }</span>
+
+  protected abstract boolean supports(final MediaType contentType);
+
+  private static void adjustHeaders(
+      MultivaluedMap&lt;String, Object&gt; headers, int conentLength, MediaType contentType) {
+<span class="fc" id="L55">    headers.replace(HttpHeaders.CONTENT_TYPE, Collections.singletonList(</span>
+<span class="fc" id="L56">        contentType.withCharset(StandardCharsets.UTF_8.displayName()).toString()));</span>
+<span class="fc" id="L57">    headers.replace(HttpHeaders.CONTENT_LENGTH, Collections.singletonList(conentLength));</span>
+<span class="fc" id="L58">  }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.7.201606060606</span></div></body></html>
